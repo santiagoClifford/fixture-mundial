@@ -43,6 +43,7 @@
   .team-name:focus{outline:2px solid var(--pitch);border-radius:3px}
   .fav-dot{cursor:pointer;display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--line);margin-left:5px;vertical-align:middle}
   .fav-dot.fav{background:var(--fav);border-color:var(--fav)}.fav-dot.hate{background:var(--hate);border-color:var(--hate)}
+  .flag{width:20px;height:14px;vertical-align:middle;margin-right:8px;border-radius:2px}
   .matches{padding:6px 10px 8px}
   .mrow{padding:5px 0;border-bottom:1px solid #f0f2f1}
   .mrow:last-child{border-bottom:none}
@@ -120,6 +121,22 @@ const GROUP_TEAMS={
   L:["Inglaterra","Ghana","Panamá","Croacia"]
 };
 const GROUPS=Object.keys(GROUP_TEAMS);
+/* mapeo de nombres a códigos ISO (para iconos de banderas en flagcdn.com) */
+const FLAG_CODES={
+  "México":"mx","Corea del Sur":"kr","República Checa":"cz","Sudáfrica":"za",
+  "Canadá":"ca","Suiza":"ch","Bosnia-Herzegovina":"ba","Catar":"qa",
+  "Brasil":"br","Marruecos":"ma","Escocia":"gb","Haití":"ht",
+  "Estados Unidos":"us","Australia":"au","Paraguay":"py","Turquía":"tr",
+  "Alemania":"de","Costa de Marfil":"ci","Ecuador":"ec","Curazao":"cw",
+  "Países Bajos":"nl","Japón":"jp","Suecia":"se","Túnez":"tn",
+  "Irán":"ir","Nueva Zelanda":"nz","Bélgica":"be","Egipto":"eg",
+  "España":"es","Uruguay":"uy","Arabia Saudita":"sa","Cabo Verde":"cv",
+  "Noruega":"no","Francia":"fr","Senegal":"sn","Irak":"iq",
+  "Argentina":"ar","Austria":"at","Jordania":"jo","Argelia":"dz",
+  "Colombia":"co","Portugal":"pt","RD Congo":"cd","Uzbekistán":"uz",
+  "Inglaterra":"gb","Ghana":"gh","Panamá":"pa","Croacia":"hr"
+};
+function flagImg(name){const c=FLAG_CODES[name];if(!c)return"";return `<img class="flag" src="https://flagcdn.com/w20/${c}.png" alt="${name}" loading="lazy">`;}
 const PAIRS=[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]];
 
 /* calendario completo (orden cronológico). [local, visitante, fecha, hora, golesL|null, golesV|null] */
@@ -290,7 +307,7 @@ function renderGroups(){
     html+=`<div class="card"><h2>Grupo ${g}</h2><table class="standings"><thead><tr><th class="team">Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
     rows.forEach((r,pos)=>{
       const qc=pos===0?"q1":pos===1?"q2":pos===2?"q3":"";
-      html+=`<tr class="${qc}"><td class="team"><span class="pos">${pos+1}</span><input class="team-name" value="${esc(S.teams[g][r.i].name)}" oninput="setName('${g}',${r.i},this.value)">${favDot(g,r.i)}</td><td>${r.P}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td><td>${r.GD>0?'+':''}${r.GD}</td><td><b>${r.Pts}</b></td></tr>`;
+      html+=`<tr class="${qc}"><td class="team"><span class="pos">${pos+1}</span>${flagImg(S.teams[g][r.i].name)}<input class="team-name" value="${esc(S.teams[g][r.i].name)}" oninput="setName('${g}',${r.i},this.value)">${favDot(g,r.i)}</td><td>${r.P}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td><td>${r.GD>0?'+':''}${r.GD}</td><td><b>${r.Pts}</b></td></tr>`;
     });
     html+=`</tbody></table><div class="matches">`;
     const order=[0,1,2,3,4,5].slice().sort((x,y)=>(S.matches[`${g}-${x}`].ord??x)-(S.matches[`${g}-${y}`].ord??y));
@@ -300,10 +317,10 @@ function renderGroups(){
       const stCls=off?"st-official":m.status==="pred"?"st-pred":"st-pending";
       const stTxt=off?"Oficial":m.status==="pred"?"Predicción":"Sin jugar";
       html+=`<div class="mrow"><div class="mdate">${esc(m.date||"")}</div><div class="match">`+
-        `<span class="mt">${esc(S.teams[g][leftIdx].name)}</span>`+
+        `${flagImg(S.teams[g][leftIdx].name)}<span class="mt">${esc(S.teams[g][leftIdx].name)}</span>`+
         `<input class="score" type="number" min="0" value="${m[leftKey]}" ${off?'disabled':''} oninput="setScore('${id}','${leftKey}',this.value)"><span>–</span>`+
         `<input class="score" type="number" min="0" value="${m[rightKey]}" ${off?'disabled':''} oninput="setScore('${id}','${rightKey}',this.value)">`+
-        `<span class="mt away">${esc(S.teams[g][rightIdx].name)}</span>`+
+        `${flagImg(S.teams[g][rightIdx].name)}<span class="mt away">${esc(S.teams[g][rightIdx].name)}</span>`+
         `<button class="stbtn ${stCls}" onclick="cycleStatus('${id}')">${stTxt}</button>`+
         (off?`<span class="lock" title="desbloquear" onclick="unlock('${id}')">🔒</span>`:"")+`</div></div>`;
     });
@@ -326,7 +343,7 @@ function renderClasificados(){
     r.forEach((row,pos)=>{
       const cls=pos===0?"q1":pos===1?"q2":pos===2&&inIds.has(g)?"q3":"";
       const tag=pos<2?"✓":pos===2&&inIds.has(g)?"3.º ✓":"";
-      html+=`<tr class="${cls}"><td class="team"><span class="pos">${pos+1}</span>${esc(row.name)}</td><td>${row.Pts} pts</td><td style="color:var(--pitch);font-weight:700">${tag}</td></tr>`;
+      html+=`<tr class="${cls}"><td class="team"><span class="pos">${pos+1}</span>${flagImg(row.name)}${esc(row.name)}</td><td>${row.Pts} pts</td><td style="color:var(--pitch);font-weight:700">${tag}</td></tr>`;
     });
     html+=`</tbody></table></div>`;
   });
@@ -339,7 +356,7 @@ function renderClasificados(){
 function sideHtml(id,name,src){
   if(!name)return `<div class="side empty"><span>—</span><span class="src">${src||""}</span></div>`;
   const won=S.ko[id]===name;
-  return `<div class="side ${won?'won':''} ${favClass(name)}" onclick="setWinner('${id}','${esc(name).replace(/'/g,"\\'")}')"><span>${esc(name)}</span><span class="src">${src||""}</span></div>`;
+  return `<div class="side ${won?'won':''} ${favClass(name)}" onclick="setWinner('${id}','${esc(name).replace(/'/g,"\\'")}')">${flagImg(name)}<span>${esc(name)}</span><span class="src">${src||""}</span></div>`;
 }
 function tieHtml(label,id,T,bronze){const d=T[id];return `<div class="tie${bronze?' bronze':''}"><div class="tid">${label}</div>${sideHtml(id,d.a,d.sa)}${sideHtml(id,d.b,d.sb)}</div>`;}
 function renderBracket(){
@@ -362,7 +379,7 @@ function renderEquipos(){
   let html=`<div class="hint">Marca favoritos (verde) u odiados (rojo) — se resaltan en grupos y bracket. Adivina el goleador y asistidor de cada equipo.</div><div class="grid">`;
   GROUPS.forEach(g=>S.teams[g].forEach((t,i)=>{
     const fav=t.fav===1,hate=t.fav===-1;
-    html+=`<div class="teamcard"><h3>${esc(t.name)} <span style="font-size:11px;color:var(--muted)">${g}</span></h3>`+
+    html+=`<div class="teamcard"><h3>${flagImg(t.name)}${esc(t.name)} <span style="font-size:11px;color:var(--muted)">${g}</span></h3>`+
       `<div class="favbtns"><button class="${fav?'on-fav':''}" onclick="setFav('${g}',${i},1)">Favorito</button>`+
       `<button onclick="setFav('${g}',${i},0)" ${!fav&&!hate?'style="background:#eee"':''}>Neutral</button>`+
       `<button class="${hate?'on-hate':''}" onclick="setFav('${g}',${i},-1)">Odiado</button></div>`+
